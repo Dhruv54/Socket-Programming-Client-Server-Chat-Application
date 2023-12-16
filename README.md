@@ -3,9 +3,9 @@
 
 # Stages for Server
 ## A. Socket Creation
-The first stage deals with the creation of a socket, which is the basic component for sending or receiving signals between nodes. The **sys/socket.h** header has the necessary functions to create a socket in C. In socket programming in C, a socket can be created by the **socket()** function with syntax,
+The first stage deals with the creation of a socket, which is the basic component for sending or receiving signals between nodes. The **sys/socket.h** header has the necessary functions to create a socket in C. A socket can be created by the **socket()** function with syntax,
 
-# int socket(int domain, int type, int protocol);
+**int socket(int domain, int type, int protocol);**
 
 The domain represents the address family over which the communication will be performed. The domain is pre-fixed values present in the sys/socket.h header. Some domains are,
 **AF_LOCAL** or **AF_UNIX** is used for local communication or in the case where the client and server are on the same node. These sockets are called UNIX domain sockets.
