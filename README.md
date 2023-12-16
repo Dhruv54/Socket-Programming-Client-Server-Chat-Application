@@ -7,7 +7,7 @@ The first stage deals with the creation of a socket, which is the basic componen
 
 **int socket(int domain, int type, int protocol);**
 
-The domain represents the address family over which the communication will be performed. The domain is pre-fixed values present in the sys/socket.h header. Some domains are,
+***The*** domain represents the address family over which the communication will be performed. The domain is pre-fixed values present in the sys/socket.h header. Some domains are,
 **AF_LOCAL** or **AF_UNIX** is used for local communication or in the case where the client and server are on the same node. These sockets are called UNIX domain sockets.
 **AF_INET** is used to represent the IPv4 address of the client to which a connection should be made. Similarly **AF_INET6** is used for IPv6 addresses. These sockets are called internet domain sockets.
 **AF_BLUETOOTH** is used for low-level Bluetooth connection.
