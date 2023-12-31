@@ -11,6 +11,9 @@ struct AcceptSocket
     bool bAcceptedSuccessfully;
 };
 
+struct AcceptSocket acceptSockets[10];
+int iAcceptSocketCount = 0;
+
 struct AcceptSocket AcceptIncomingConnection(int iServerSocketFD)
 {
     struct sockaddr_in ClientAddress;
@@ -31,6 +34,14 @@ struct AcceptSocket AcceptIncomingConnection(int iServerSocketFD)
     return acceptedSocket;
 } 
 
+void sendMessagetoOtherClients(char buffer[1024],int iSocketFD)
+{
+    for (int i = 0; i < iAcceptSocketCount; i++)
+    {
+        if(acceptSockets[i].iAcceptSocketFD != iSocketFD)
+            send(acceptSockets[i].iAcceptSocketFD,buffer,strlen(buffer),0);
+    }
+}
 void ReceiveAndPrintIncomingData(int iSocketFD)
 {
     char buffer[1024];
@@ -43,6 +54,7 @@ void ReceiveAndPrintIncomingData(int iSocketFD)
         {
             printf("\nResponse was :\n%s\n",buffer);
             printf("\nReceived Size :%ld\n",iRecevedSize);
+            sendMessagetoOtherClients(buffer,iSocketFD);
         }
         else if(iRecevedSize == 0)
         {
@@ -54,6 +66,30 @@ void ReceiveAndPrintIncomingData(int iSocketFD)
             printf("\nError while Receiving Data!\nError Code : %ld\n",iRecevedSize);
             break;
         }
+    }
+   
+}
+
+void receiveAndPrintDataFromSeperateThread(int iClientSocketFD)
+{
+    pthread_t pId;
+    pthread_create(&pId,NULL,(void *)ReceiveAndPrintIncomingData,iClientSocketFD);
+
+/*
+extern int pthread_create (pthread_t *__restrict __newthread,
+			   const pthread_attr_t *__restrict __attr,
+			   void *(*__start_routine) (void *),
+			   void *__restrict __arg)
+*/
+}
+
+void startAcceptingIncomingConnections(int iServerSocketFD)
+{
+    while (true)
+    {
+        struct AcceptSocket ClientSocket = AcceptIncomingConnection(iServerSocketFD);
+        acceptSockets[iAcceptSocketCount++]=ClientSocket;
+        receiveAndPrintDataFromSeperateThread(ClientSocket.iAcceptSocketFD);
     }
 }
 
@@ -96,34 +132,18 @@ int main()
 		printf("\nError while Listening!\nError Code : %d\n",iListenerResult);
 	}
 
-   // struct sockaddr_in ClientAddress;
-   // int ClientAddressSize = sizeof(struct sockaddr_in);
-    // int accept (int __fd, __SOCKADDR_ARG __addr,socklen_t *__restrict __addr_len);
-   // int iClientSocketFD = accept(iServerSocketFD,(struct sockaddr*)&ClientAddress,&ClientAddressSize);
+    //struct AcceptSocket ClientSocket = AcceptIncomingConnection(iServerSocketFD);
 
-    struct AcceptSocket ClientSocket = AcceptIncomingConnection(iServerSocketFD);
-
-    if(ClientSocket.iAcceptSocketFD == -1)
-    {
-        printf("\nError while Accepting!\nError Code : %d\n",ClientSocket.iAcceptSocketFD);
-        return -1;
-    }
-    else
-    {
-        printf("\nAccept Done.\nClient Socket FD : %d\n",ClientSocket.iAcceptSocketFD);
-    }
-
-    ReceiveAndPrintIncomingData(ClientSocket.iAcceptSocketFD);
-
-    // int close (int __fd);
-    int iCloseResult = close(ClientSocket.iAcceptSocketFD);
+    startAcceptingIncomingConnections(iServerSocketFD);
 
     // int shutdown (int __fd, int __how);
     int iShutDownResult = shutdown(iServerSocketFD,SHUT_RDWR);
     if(iShutDownResult == -1)
         printf("\nError while shutting down Socket!\nError Code : %d\n",iShutDownResult);
 
-    printf("\niCloseResult : %d\niShutDownResult : %d\n",iCloseResult,iShutDownResult);
+
+   // printf("\niCloseResult : %d\niShutDownResult : %d\n",iCloseResult,iShutDownResult);
     return 0;
 }
+
 //  lsof -i :2000

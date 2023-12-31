@@ -2,6 +2,40 @@
 #define IP		"127.0.0.1"
 #define PORT 	2000
 
+void ListenAndPrintIncomingData(int iSocketFD)
+{
+    char buffer[1024];
+    while (true)
+    {
+        // recv (int __fd, void *__buf, size_t __n, int __flags)
+        ssize_t iRecevedSize = recv(iSocketFD,buffer,1024,0);
+        buffer[iRecevedSize]=0;
+        if(iRecevedSize > 0)
+        {
+            printf("\nResponse was :\n%s\n",buffer);
+            printf("\nReceived Size :%ld\n",iRecevedSize);
+        }
+        else if(iRecevedSize == 0)
+        {
+            printf("\n No Data Received!\nReceived Size : %ld\n",iRecevedSize);
+            break;
+        }
+        else
+        {
+            printf("\nError while Receiving Data!\nError Code : %ld\n",iRecevedSize);
+            break;
+        }
+    }
+	// int close (int __fd);
+    int iCloseResult = close(iSocketFD);
+}
+
+void StartListeningAndPrintDataFromSeperateThread(int iClientSocketFD)
+{
+    pthread_t pId;
+    pthread_create(&pId,NULL,(void *)ListenAndPrintIncomingData,iClientSocketFD);
+}
+
 int main()
 {
 	int iClientSocketFD = CreateTCPIpv4Socket();
@@ -27,8 +61,9 @@ int main()
 	else
 	{
 		printf("\nError while Connecting!\nError Code : %d\n",iResult);
-		return -1;
 	}
+
+	StartListeningAndPrintDataFromSeperateThread(iClientSocketFD);
 
 	char* line = NULL;
 	size_t lineSize = 0;
@@ -47,9 +82,7 @@ int main()
 			else
 			{
 				// ssize_t send (int __fd, const void *__buf, size_t __n, int __flags);
-				printf("\nELSE\n");
 				ssize_t amoutWasSent = send(iClientSocketFD,line,charCount,0);
-				printf("\namoutWasSent : %ld\n",amoutWasSent);
 				if(amoutWasSent>0)
 					printf("\nData Send Successfully. Size : %ld\n",amoutWasSent);
 				else
